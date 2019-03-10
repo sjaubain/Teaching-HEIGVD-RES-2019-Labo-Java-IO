@@ -22,6 +22,10 @@ public class DFSFileExplorer implements IFileExplorer {
         // Pre order
         visitor.visit(rootDirectory);
 
+        // DFS should work if there is no file
+        if (!rootDirectory.exists()) return;
+
+
         File[] filesList = rootDirectory.listFiles();
 
         Arrays.sort(filesList);
