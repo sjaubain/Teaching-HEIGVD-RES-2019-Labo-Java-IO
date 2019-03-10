@@ -1,5 +1,7 @@
 package ch.heigvd.res.labio.impl.filters;
 
+import ch.heigvd.res.labio.impl.Utils;
+
 import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -10,32 +12,81 @@ import java.util.logging.Logger;
  * When filter encounters a line separator, it sends it to the decorated writer.
  * It then sends the line number and a tab character, before resuming the write
  * process.
- *
- * Hello\n\World -> 1\Hello\n2\tWorld
+ * <p>
+ * Hello\n\World -> 1\tHello\n2\tWorld
  *
  * @author Olivier Liechti
  */
 public class FileNumberingFilterWriter extends FilterWriter {
 
-  private static final Logger LOG = Logger.getLogger(FileNumberingFilterWriter.class.getName());
+    /**
+     * Number of lines already written
+     */
+    private int nbLines;
 
-  public FileNumberingFilterWriter(Writer out) {
-    super(out);
-  }
+    /**
+     * To know if we have to write the line number before the text (true by default)
+     */
+    private boolean newLine;
 
-  @Override
-  public void write(String str, int off, int len) throws IOException {
-    throw new UnsupportedOperationException("The student has not implemented this method yet.");
-  }
+    private static final Logger LOG = Logger.getLogger(FileNumberingFilterWriter.class.getName());
 
-  @Override
-  public void write(char[] cbuf, int off, int len) throws IOException {
-    throw new UnsupportedOperationException("The student has not implemented this method yet.");
-  }
+    public FileNumberingFilterWriter(Writer out) {
+        super(out);
+        nbLines = 0;
+        newLine = true;
+    }
 
-  @Override
-  public void write(int c) throws IOException {
-    throw new UnsupportedOperationException("The student has not implemented this method yet.");
-  }
+    @Override
+    public void write(String str, int off, int len) throws IOException {
 
+        String[] lines = Utils.getNextLine(str.substring(off, off + len));
+        String nextLine = lines[0];
+        String remainingText = lines[1];
+
+        String fileNumberingText = (newLine ? ++nbLines + "\t" : "") + nextLine;
+
+        while(!nextLine.isEmpty()) {
+
+            /**
+             * Update next line
+             */
+            lines = Utils.getNextLine(remainingText);
+            nextLine = lines[0];
+            remainingText = lines[1];
+
+            /**
+             * We have to write the line number each time nextLine is not
+             * empty. (getNextLine method returns a non empty first String
+             * for each CRLF found int the input)
+             */
+            fileNumberingText += ++nbLines + "\t" + nextLine;
+        }
+
+        /**
+         * In case input does not contain CRLF, loop above breaks
+         * cause nextLine is empty but the remainingText contains
+         * the last text to write (c.f getNextLine)
+         */
+        if(!remainingText.isEmpty()) {
+            fileNumberingText += remainingText;
+        }
+
+        /**
+         * Finally write the output
+         */
+        super.out.write(fileNumberingText);
+
+        newLine = false;
+    }
+
+    @Override
+    public void write(char[] cbuf, int off, int len) throws IOException {
+        this.write(new String(cbuf), off, len);
+    }
+
+    @Override
+    public void write(int c) throws IOException {
+        throw new UnsupportedOperationException("The student has not implemented this method yet.");
+    }
 }
