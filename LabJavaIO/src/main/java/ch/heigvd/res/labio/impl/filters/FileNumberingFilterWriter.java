@@ -25,9 +25,11 @@ public class FileNumberingFilterWriter extends FilterWriter {
     private int nbLines;
 
     /**
-     * To know if we have to write the line number before the text (true by default)
+     * To know if we have to write the line number (true by default)
      */
     private boolean newLine;
+
+    private boolean CRfound;
 
     private static final Logger LOG = Logger.getLogger(FileNumberingFilterWriter.class.getName());
 
@@ -35,6 +37,7 @@ public class FileNumberingFilterWriter extends FilterWriter {
         super(out);
         nbLines = 0;
         newLine = true;
+        CRfound = false;
     }
 
     @Override
@@ -61,6 +64,8 @@ public class FileNumberingFilterWriter extends FilterWriter {
              * for each CRLF found int the input)
              */
             fileNumberingText += ++nbLines + "\t" + nextLine;
+
+            newLine = !nextLine.isEmpty();
         }
 
         /**
@@ -70,6 +75,7 @@ public class FileNumberingFilterWriter extends FilterWriter {
          */
         if(!remainingText.isEmpty()) {
             fileNumberingText += remainingText;
+            newLine = false;
         }
 
         /**
@@ -77,7 +83,6 @@ public class FileNumberingFilterWriter extends FilterWriter {
          */
         super.out.write(fileNumberingText);
 
-        newLine = false;
     }
 
     @Override
@@ -87,6 +92,13 @@ public class FileNumberingFilterWriter extends FilterWriter {
 
     @Override
     public void write(int c) throws IOException {
-        throw new UnsupportedOperationException("The student has not implemented this method yet.");
+        if(c == '\r') {
+            CRfound = true;
+        } else if(c == '\n' && CRfound) {
+            this.write("\r\n");
+            CRfound = false;
+        } else {
+            this.write(String.valueOf((char) c));
+        }
     }
 }
