@@ -30,9 +30,9 @@ public class UpperCaseFilterWriter extends FilterWriter {
     public void write(int c) throws IOException {
         // If c is a lower case letter
         if(c >= 97 && c <= 122)
-            c -= toUpperCaseAsciiOffset;
-        
-        super.write(c);
+            c += toUpperCaseAsciiOffset;
+
+        super.write((char) c);
     }
 
 }
