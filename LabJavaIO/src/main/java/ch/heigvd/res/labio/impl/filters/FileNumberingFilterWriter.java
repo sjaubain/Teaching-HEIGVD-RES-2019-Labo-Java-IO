@@ -93,9 +93,9 @@ public class FileNumberingFilterWriter extends FilterWriter {
     @Override
     public void write(int c) throws IOException {
         if(c == '\r') {
+            this.write("\r\n");
             CRfound = true;
         } else if(c == '\n' && CRfound) {
-            this.write("\r\n");
             CRfound = false;
         } else {
             this.write(String.valueOf((char) c));
